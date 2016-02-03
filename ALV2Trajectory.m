@@ -181,32 +181,46 @@ bounds.upper.time = [0 tfMax];
 
 % Set Initial Conditions
 
-V0 = V(end);        H0 = 0;     v0 = sqrt(v_H(end)^2+v_V(end)^2);     beta0 = beta(end);    m0 = mPayload + mCF + mP2 + mB2+ mP3 + mB3;     % Initial Conditions
+V0 = V(end);        H0 = 0;     v_V0 = v_V(end);     v_H0 = v_H(end);    m0 = mPayload + mCF + mP2 + mB2+ mP3 + mB3;     % Initial Conditions
 
 %Limiting Conditions and Boundary Constraints
-Vf = 400e03; %Reference Trajectory Altitude (m)
+Vf = 100e03; %Reference Trajectory Altitude (m)
 Hf = 400e03; % Maximum Horizontal Distance (m) (arbitrary)
-vf =  7.67e03; % Maximum Velocity (m/s) (Orbital Velocity)    
-betaf = 0; % Final Trajectory Inclination (rad)
+v_max =  7.67e03; % Maximum Velocity (m/s) (Orbital Velocity)    
 mf = mPayload + mB2 + mCF + mP3 + mB3; % Minimum Mass (kg)
 
 
 % Set Boundary Conditions and Limits
-bounds.lower.states = [0.9*V0; H0; 0.9*v0; 0; mf];
-bounds.upper.states = [ 1.1*Vf;  Hf; 1.1*vf; deg2rad(90); m0];
+bounds.lower.states = [0.9*V0; H0; -1; 0.9*v_H0; mf];
+bounds.upper.states = [ 1.1*Vf;  Hf; v_max; v_max; m0];
 
-bounds.lower.controls = -.1;
-bounds.upper.controls = .1; % Maximum Angular Velocity (Currently Arbitrary)
+bounds.lower.controls = 0.;
+bounds.upper.controls = beta(end); % Maximum Angle 
 
-bounds.lower.events = [V0; H0; v0; beta0; m0; Vf; betaf];	
+bounds.lower.events = [V0; H0; v_V0; v_H0; m0; Vf; 0];	
 bounds.upper.events = bounds.lower.events;
 
 SecondStage.bounds = bounds;
 
 % No. Nodes To Use
-algorithm.nodes = [89];
+algorithm.nodes = [30];
 
 CONSTANTS.nodes = algorithm.nodes;
+
+% %%Define Guess
+guess.states(1,:) = [V0, 100e03];
+guess.states(2,:) = [H0,  100e03];
+guess.states(3,:) = [v_V0,  0];
+guess.states(4,:) = [v_H0,  v_H0+1000];
+guess.states(5,:) = [m0,  mf];
+guess.controls    = [beta(end), 0];
+guess.time        = [t0, 100];
+
+algorithm.guess = guess;
+% =======================================================================
+
+
+
 
 % Define Subroutine Files
 SecondStage.cost      = 'SecondStageCost';
@@ -220,28 +234,28 @@ SecondStage.events    = 'SecondStageEvents';
 
 V2 = primal.states(1,:);   
 H2 = primal.states(2,:);
-v2 = primal.states(3,:);
-beta2 = primal.states(4,:);     
+v_V2 = primal.states(3,:);
+v_H2 = primal.states(4,:);     
 m2 = primal.states(5,:); 
 t2 =  primal.nodes;
 
-omega2 = primal.controls;
+beta2 = primal.controls;
 
 figure(2)
 subplot(5,1,1)
 plot(H2,V2);
 
 subplot(5,1,2)
-plot(t2,v2);
+plot(t2,v_V2);
 
 subplot(5,1,3)
-plot(beta2);
+plot(t2,v_H2);
 
 subplot(5,1,4)
 plot(t2,m2);
 
 subplot(5,1,5)
-plot(t2,omega2);
+plot(t2,beta2);
 
 figure(3)
 subplot(2,5,[1,5]);
