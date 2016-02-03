@@ -7,7 +7,7 @@ atmosphere = dlmread('atmosphere.txt');
 
 
 % AeroCoefficients
-%  placeholders only
+% PLACEHOLDERS
 
 AeroCoeffs = dlmread('AeroCoeffs.txt');
 AeroCoeffs = [[0 0];AeroCoeffs];
@@ -34,7 +34,7 @@ mL = 410; % Landing Mass (kg)
 
 % Define Launch System Characteristics Which are Dependent on no. of First Stage Modules
 if N == 4
-    A1 = 50; % Reference Area (ARBITRARY PLACEHOLDER) (m^2)
+    A1 = 10; % Reference Area (ARBITRARY PLACEHOLDER) (m^2)
     mPayload = 18; % Payload Mass (kg)
     mCF = 7; % Container and Fairing Mass (kg)
     mP2 = 930; % Second Stage Propellant Loading (Total) (kg)
@@ -91,8 +91,8 @@ v_H(1) = 0; % Horizontal Velocity Array (m/s)
 v_a = interp1(atmosphere(:,1),atmosphere(:,5),V(1)); % Speed of Sound
 M(1) = sqrt(v_H(1)^2+v_V(1)^2)/v_a; % Mach no Array
 Cd(1) = interp1(AeroCoeffs(:,1),AeroCoeffs(:,2),M(1)); % Drag Coefficient Array (N);
-D(1) = 0.5* Cd * v(1)^2 * A1 * interp1(atmosphere(:,1),atmosphere(:,4),V(1));
-T(1) = interp1(FirstStageThrust(:,1),FirstStageThrust(:,6),0)*N*3; % Thrust Array (kN) (3 Engines on Earch ALV-2 First Stage)
+D(1) = 0.5* Cd * (v_H(1)^2+v_V(1)^2) * A1 * interp1(atmosphere(:,1),atmosphere(:,4),V(1));
+T(1) = interp1(FirstStageThrust(:,1),FirstStageThrust(:,6),0)*N*3; % Thrust Array (kN) (3 Engines on Each ALV-2 First Stage Module)
 a_V(1) = (T(1)*10^3-D(1))/m(1)*sin(beta(1)) - 9.81; % Vertical Acceleration Array (m/s^2)
 a_H(1) = (T(1)*10^3-D(1))/m(1)*cos(beta(1)); % Horizontal Acceleration Array (m/s^2)
 
@@ -101,6 +101,9 @@ a_H(1) = (T(1)*10^3-D(1))/m(1)*cos(beta(1)); % Horizontal Acceleration Array (m/
 %==========================================================================
 %----------------------- First Stage Simulation ---------------------------
 %==========================================================================
+
+% Utilising a Gravity Turn Manoeuvre 
+% Cartesian Coordinates
 
 mParray1(1) = mP1*N; % Initialise Propellant Mass Array (kg)
 
@@ -115,9 +118,9 @@ mParray1(i+1) = mParray1(i) - PCR1*N*dt;
 
 m(i+1) = m(i) - PCR1*N*dt;
 
-H(i+1) = H(i) + v(i)*cos(beta(i))*dt;
+H(i+1) = H(i) + v_H(i)*dt;
 
-V(i+1) = V(i) + v(i)*sin(beta(i))*dt; 
+V(i+1) = V(i) + v_V(i)*dt; 
 
 v_H(i+1) = v_H(i) + a_H(i)*dt;
 
@@ -125,36 +128,116 @@ v_V(i+1) = v_V(i) + a_V(i)*dt;
 
 T(i+1) = interp1(FirstStageThrust(:,1),FirstStageThrust(:,6),V(i+1)/1000) * N*3;
 
-v_a = interp1(atmosphere(:,1),atmosphere(:,5),V(i));
+v_a = interp1(atmosphere(:,1),atmosphere(:,5),V(i+1));
 
-M(i+1) = sqrt(v_H(i)^2+v_V(i)^2)/v_a;
+M(i+1) = sqrt(v_H(i+1)^2+v_V(i+1)^2)/v_a;
 
 Cd(i+1) = interp1(AeroCoeffs(:,1),AeroCoeffs(:,2),M(i+1)); 
 
-D(i+1) = 0.5 * Cd(i+1) * v(i+1)^2 * A1 * interp1(atmosphere(:,1),atmosphere(:,4),V(i+1));
+D(i+1) = 0.5 * Cd(i+1) * (v_H(i+1)^2+v_V(i+1)^2) * A1 * interp1(atmosphere(:,1),atmosphere(:,4),V(i+1));
 
 
 
 % Gravity Turn
 if t(i) < 30
 beta(i+1) = deg2rad(90);
-elseif t(i) >= 30 && strcmp(pitchover,'yes') == 0
-beta(i+1) = deg2rad(89); % pitchover angle, assumed to be instantaneous
+elseif t(i) >= 30 && strcmp(pitchover,'yes') == 0 % Pitchover Time (Arbitrary Currently)
+beta(i+1) = deg2rad(89); % Pitchover Angle (assumed to be instantaneous)
 pitchover = 'yes';
 elseif t(i) >= 30 && strcmp(pitchover,'yes') == 1
-beta(i+1) = beta(i) - 9.81/v(i)*sin(deg2rad(90) - beta(i))*dt;  % NO EARTH CURVATURE INCLUDED YET
+beta(i+1) = beta(i) - 9.81/sqrt(v_H(i+1)^2+v_V(i+1)^2)*sin(deg2rad(90) - beta(i))*dt; % Gravity Turn Initiated  % NO EARTH CURVATURE INCLUDED YET
 end
 
-a(i+1) = (T(i+1)*10^3-D(i+1))/m(i+1) - 9.81*sin(beta(i+1)); % at the moment acceleration is all in velocity plane (ie no tangential gravity) fix this
+a_V(i+1) = (T(i+1)*10^3-D(i+1))/m(i+1)*sin(beta(i+1)) - 9.81; 
+a_H(i+1) = (T(i+1)*10^3-D(i+1))/m(i+1)*cos(beta(i+1));
 
 t(i+1) = t(i) + dt;
 
 i = i+1;
 end
 
+figure(1);
+plot(H/1000,V/1000)
+
+%==========================================================================
+%----------------------- Second Stage Simulation ---------------------------
+%==========================================================================
+
+global CONSTANTS
+CONSTANTS.PCR2 = PCR2;
 
 
-plot(H,V)
+% Utilising DIDO to Solve a Linear Tangent Steering Problem
+
+
+% bound the time intervals
+%-------------------------
+
+t0 = 0;   tfMax = 300;  % Maximum Time Interval
+
+bounds.lower.time = [0 0];           
+bounds.upper.time = [0 tfMax];  
+
+
+% Set Initial Conditions
+
+V0 = V(end);        H0 = 0;     v0 = sqrt(v_H(end)^2+v_V(end)^2);     beta0 = beta(end);    m0 = mPayload + mCF + mP2 + mB2+ mP3 + mB3;     % Initial Conditions
+
+%Limiting Conditions and Boundary Constraints
+Vf = 400e03; %Reference Trajectory Altitude (m)
+Hf = 400e03; % Maximum Horizontal Distance (m) (arbitrary)
+vf =  7.67e03; % Maximum Velocity (m/s) (Orbital Velocity)    
+betaf = 0; % Final Trajectory Inclination (rad)
+mf = mPayload + mB2 + mCF + mP3 + mB3; % Minimum Mass (kg)
+
+
+% Set Boundary Conditions and Limits
+bounds.lower.states = [0.9*V0; H0; 0.9*v0; 0; mf];
+bounds.upper.states = [ 1.1*Vf;  Hf; 1.1*vf; deg2rad(90); m0];
+
+bounds.lower.controls = 0;
+bounds.upper.controls = .1; % Maximum Angular Velocity (Currently Arbitrary)
+
+bounds.lower.events = [V0; H0; v0; beta0; m0; Vf; betaf];	
+bounds.upper.events = bounds.lower.events;
+
+SecondStage.bounds = bounds;
+
+% No. Nodes To Use
+algorithm.nodes = [30];
+
+CONSTANTS.nodes = algorithm.nodes;
+
+% Define Subroutine Files
+SecondStage.cost      = 'SecondStageCost';
+SecondStage.dynamics  = 'SecondStageDynamics';
+SecondStage.events    = 'SecondStageEvents';
+
+% Initialise DIDO
+[cost, primal] = dido(SecondStage, algorithm);
+
+% Plotting ================================================================
+
+V2 = primal.states(1,:);   
+H2 = primal.states(2,:);
+v2 = primal.states(3,:);
+beta2 = primal.states(4,:);     
+m2 = primal.states(5,:); 
+t2 =  primal.nodes;
+
+
+figure(2)
+subplot(5,1,1)
+plot(H2,V2);
+
+subplot(5,1,2)
+plot(t2,m2);
+
+subplot(5,1,2)
+plot(t2,m2);
+
+
+
 
 
 

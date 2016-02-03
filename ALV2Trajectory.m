@@ -7,7 +7,7 @@ atmosphere = dlmread('atmosphere.txt');
 
 
 % AeroCoefficients
-%  placeholders only
+% PLACEHOLDERS
 
 AeroCoeffs = dlmread('AeroCoeffs.txt');
 AeroCoeffs = [[0 0];AeroCoeffs];
@@ -102,6 +102,9 @@ a_H(1) = (T(1)*10^3-D(1))/m(1)*cos(beta(1)); % Horizontal Acceleration Array (m/
 %----------------------- First Stage Simulation ---------------------------
 %==========================================================================
 
+% Utilising a Gravity Turn Manoeuvre 
+% Cartesian Coordinates
+
 mParray1(1) = mP1*N; % Initialise Propellant Mass Array (kg)
 
 i = 1; % Temporary Iteration Counter
@@ -138,7 +141,7 @@ D(i+1) = 0.5 * Cd(i+1) * (v_H(i+1)^2+v_V(i+1)^2) * A1 * interp1(atmosphere(:,1),
 % Gravity Turn
 if t(i) < 30
 beta(i+1) = deg2rad(90);
-elseif t(i) >= 30 && strcmp(pitchover,'yes') == 0
+elseif t(i) >= 30 && strcmp(pitchover,'yes') == 0 % Pitchover Time (Arbitrary Currently)
 beta(i+1) = deg2rad(89); % Pitchover Angle (assumed to be instantaneous)
 pitchover = 'yes';
 elseif t(i) >= 30 && strcmp(pitchover,'yes') == 1
@@ -153,9 +156,109 @@ t(i+1) = t(i) + dt;
 i = i+1;
 end
 
-
-
+figure(1);
 plot(H/1000,V/1000)
 
+%==========================================================================
+%----------------------- Second Stage Simulation ---------------------------
+%==========================================================================
 
+global CONSTANTS
+CONSTANTS.PCR2 = PCR2;
+
+
+% Utilising DIDO to Solve a Linear Tangent Steering Problem
+
+
+% bound the time intervals
+%-------------------------
+
+t0 = 0;   tfMax = 400;  % Maximum Time Interval
+
+bounds.lower.time = [0 0];           
+bounds.upper.time = [0 tfMax];  
+
+
+% Set Initial Conditions
+
+V0 = V(end);        H0 = 0;     v0 = sqrt(v_H(end)^2+v_V(end)^2);     beta0 = beta(end);    m0 = mPayload + mCF + mP2 + mB2+ mP3 + mB3;     % Initial Conditions
+
+%Limiting Conditions and Boundary Constraints
+Vf = 400e03; %Reference Trajectory Altitude (m)
+Hf = 400e03; % Maximum Horizontal Distance (m) (arbitrary)
+vf =  7.67e03; % Maximum Velocity (m/s) (Orbital Velocity)    
+betaf = 0; % Final Trajectory Inclination (rad)
+mf = mPayload + mB2 + mCF + mP3 + mB3; % Minimum Mass (kg)
+
+
+% Set Boundary Conditions and Limits
+bounds.lower.states = [0.9*V0; H0; 0.9*v0; 0; mf];
+bounds.upper.states = [ 1.1*Vf;  Hf; 1.1*vf; deg2rad(90); m0];
+
+bounds.lower.controls = -.1;
+bounds.upper.controls = .1; % Maximum Angular Velocity (Currently Arbitrary)
+
+bounds.lower.events = [V0; H0; v0; beta0; m0; Vf; betaf];	
+bounds.upper.events = bounds.lower.events;
+
+SecondStage.bounds = bounds;
+
+% No. Nodes To Use
+algorithm.nodes = [89];
+
+CONSTANTS.nodes = algorithm.nodes;
+
+% Define Subroutine Files
+SecondStage.cost      = 'SecondStageCost';
+SecondStage.dynamics  = 'SecondStageDynamics';
+SecondStage.events    = 'SecondStageEvents';
+
+% Initialise DIDO
+[cost, primal, dual] = dido(SecondStage, algorithm);
+
+% Plotting ================================================================
+
+V2 = primal.states(1,:);   
+H2 = primal.states(2,:);
+v2 = primal.states(3,:);
+beta2 = primal.states(4,:);     
+m2 = primal.states(5,:); 
+t2 =  primal.nodes;
+
+omega2 = primal.controls;
+
+figure(2)
+subplot(5,1,1)
+plot(H2,V2);
+
+subplot(5,1,2)
+plot(t2,v2);
+
+subplot(5,1,3)
+plot(beta2);
+
+subplot(5,1,4)
+plot(t2,m2);
+
+subplot(5,1,5)
+plot(t2,omega2);
+
+figure(3)
+subplot(2,5,[1,5]);
+
+line(t2, dual.dynamics(1,:),'Color','k', 'LineStyle','-');
+line(t2, dual.dynamics(2,:),'Color','k', 'LineStyle','--');
+line(t2, dual.dynamics(3,:),'Color','k', 'LineStyle','-.');
+line(t2, dual.dynamics(4,:),'Color','k', 'LineStyle',':');
+title('costates')
+xlabel('time');
+ylabel('Costates');
+% axis([0,t2(end),-1,1])
+legend('\lambda_1', '\lambda_2', '\lambda_3', '\lambda_4');
+
+subplot(2,5,[6,10])
+Hamiltonian = dual.Hamiltonian(1,:);
+plot(t2,Hamiltonian,'Color','k');
+% axis([0,t2(end),-1,1])
+title('Hamiltonian')
 
