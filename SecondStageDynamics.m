@@ -3,7 +3,7 @@ function xdot = SecondStageDynamics(primal)
 
 global CONSTANTS
 
-Thrust = 20000; %N, THIS IS AN ASSUMPTION
+Thrust = 3000*4; %N
 
 % Initialise States
 V = primal.states(1,:);   
@@ -22,7 +22,7 @@ beta = primal.controls;
 % Need to correct for Earths curvature
 Vdot =  v_V;
 Hdot =  v_H;
-v_Vdot = Thrust./m .* sin(beta) - 9.81;
+v_Vdot = Thrust./m .* sin(beta) - 6.674e-11.*5.97e24./(V + 6371e3).^2 + v_H.^2./(V + 6371e3); % vertical acceleration includes centripetal motion and variable gravity
 v_Hdot = Thrust./m .* cos(beta);
 
 % betadot = betadot; % Need to correct for Earths curvature

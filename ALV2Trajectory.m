@@ -208,7 +208,7 @@ algorithm.nodes = [30];
 CONSTANTS.nodes = algorithm.nodes;
 
 % %%Define Guess
-guess.states(1,:) = [V0, 100e03];
+guess.states(1,:) = [V0, 400e03];
 guess.states(2,:) = [H0,  100e03];
 guess.states(3,:) = [v_V0,  0];
 guess.states(4,:) = [v_H0,  v_H0+1000];
@@ -257,22 +257,22 @@ plot(t2,m2);
 subplot(5,1,5)
 plot(t2,beta2);
 
-figure(3)
-subplot(2,5,[1,5]);
-
-line(t2, dual.dynamics(1,:),'Color','k', 'LineStyle','-');
-line(t2, dual.dynamics(2,:),'Color','k', 'LineStyle','--');
-line(t2, dual.dynamics(3,:),'Color','k', 'LineStyle','-.');
-line(t2, dual.dynamics(4,:),'Color','k', 'LineStyle',':');
-title('costates')
-xlabel('time');
-ylabel('Costates');
-% axis([0,t2(end),-1,1])
-legend('\lambda_1', '\lambda_2', '\lambda_3', '\lambda_4');
-
-subplot(2,5,[6,10])
-Hamiltonian = dual.Hamiltonian(1,:);
-plot(t2,Hamiltonian,'Color','k');
-% axis([0,t2(end),-1,1])
-title('Hamiltonian')
+% figure(3)
+% subplot(2,5,[1,5]);
+% 
+% line(t2, dual.dynamics(1,:),'Color','k', 'LineStyle','-');
+% line(t2, dual.dynamics(2,:),'Color','k', 'LineStyle','--');
+% line(t2, dual.dynamics(3,:),'Color','k', 'LineStyle','-.');
+% line(t2, dual.dynamics(4,:),'Color','k', 'LineStyle',':');
+% title('costates')
+% xlabel('time');
+% ylabel('Costates');
+% % axis([0,t2(end),-1,1])
+% legend('\lambda_1', '\lambda_2', '\lambda_3', '\lambda_4');
+% 
+% subplot(2,5,[6,10])
+% Hamiltonian = dual.Hamiltonian(1,:);
+% plot(t2,Hamiltonian,'Color','k');
+% % axis([0,t2(end),-1,1])
+% title('Hamiltonian')
 
