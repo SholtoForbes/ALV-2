@@ -7,11 +7,11 @@ atmosphere = dlmread('atmosphere.txt');
 
 
 % AeroCoefficients
-% PLACEHOLDERS, DO NOT CHANGE BETWEEN STAGES
+% PLACEHOLDERS
 
 AeroCoeffs = dlmread('AeroCoeffs.txt');
 AeroCoeffs = [[0 0];AeroCoeffs];
-A1 = 4; % Reference Area (ARBITRARY PLACEHOLDER) (m^2)
+
 
 % Thrust Libraries
 % Altitude(km)  Pressure(atm)  Effective Exhaust Velocity(m/s)
@@ -34,6 +34,7 @@ mL = 410; % Landing Mass (kg)
 
 % Define Launch System Characteristics Which are Dependent on no. of First Stage Modules
 if N == 4
+    A1 = 10; % Reference Area (ARBITRARY PLACEHOLDER) (m^2)
     mPayload = 18; % Payload Mass (kg)
     mCF = 7; % Container and Fairing Mass (kg)
     mP2 = 930; % Second Stage Propellant Loading (Total) (kg)
@@ -125,12 +126,7 @@ v_H(i+1) = v_H(i) + a_H(i)*dt;
 
 v_V(i+1) = v_V(i) + a_V(i)*dt;
 
-
-if V(i+1) < 48000
 T(i+1) = interp1(FirstStageThrust(:,1),FirstStageThrust(:,6),V(i+1)/1000) * N*3;
-else
-T(i+1) = interp1(FirstStageThrust(:,1),FirstStageThrust(:,6),48000/1000) * N*3;
-end
 
 v_a = interp1(atmosphere(:,1),atmosphere(:,5),V(i+1));
 
@@ -143,7 +139,7 @@ D(i+1) = 0.5 * Cd(i+1) * (v_H(i+1)^2+v_V(i+1)^2) * A1 * interp1(atmosphere(:,1),
 
 
 % Gravity Turn
-if t(i) < 40
+if t(i) < 30
 beta(i+1) = deg2rad(90);
 elseif t(i) >= 30 && strcmp(pitchover,'yes') == 0 % Pitchover Time (Arbitrary Currently)
 beta(i+1) = deg2rad(89); % Pitchover Angle (assumed to be instantaneous)
@@ -168,14 +164,14 @@ end
 
 m20 = mPayload + mCF + mP2 + mB2+ mP3 + mB3;
 
-mParray2(i) = mP2;
+mParray2(1) = mP2;
 
-while mParray2(i) > 0
+while mParray1(i) > 0
 % Increment Vehicle Parameters
     
-mParray2(i+1) = mParray2(i) - PCR2*dt; 
+mParray1(i+1) = mParray1(i) - PCR1*N*dt; 
 
-m(i+1) = m(i) - PCR2*dt;
+m(i+1) = m(i) - PCR1*N*dt;
 
 H(i+1) = H(i) + v_H(i)*dt;
 
@@ -185,28 +181,16 @@ v_H(i+1) = v_H(i) + a_H(i)*dt;
 
 v_V(i+1) = v_V(i) + a_V(i)*dt;
 
-if V(i+1) < 48000
-T(i+1) = interp1(SecondStageThrust(:,1),SecondStageThrust(:,6),V(i+1)/1000)*4;
-else
-T(i+1) = interp1(SecondStageThrust(:,1),SecondStageThrust(:,6),48000/1000)*4  ;
-end
+T(i+1) = interp1(SecondtageThrust(:,1),FirstStageThrust(:,6),V(i+1)/1000) * N*3;
 
-if V(i+1) < 85000
 v_a = interp1(atmosphere(:,1),atmosphere(:,5),V(i+1));
-else
-v_a = interp1(atmosphere(:,1),atmosphere(:,5),85000);
-end
-
 
 M(i+1) = sqrt(v_H(i+1)^2+v_V(i+1)^2)/v_a;
 
 Cd(i+1) = interp1(AeroCoeffs(:,1),AeroCoeffs(:,2),M(i+1)); 
 
-if V(i+1) < 85000
 D(i+1) = 0.5 * Cd(i+1) * (v_H(i+1)^2+v_V(i+1)^2) * A1 * interp1(atmosphere(:,1),atmosphere(:,4),V(i+1));
-else
-D(i+1) = 0;
-end
+
 
 
 % Gravity Turn
@@ -221,68 +205,10 @@ t(i+1) = t(i) + dt;
 i = i+1;
 end
 
-
-
-m30 = mPayload + mCF + mP3 + mB3;
-
-mParray3(i) = mP3;
-
-A3 = 1; 
-
-while mParray3(i) > 0
-% Increment Vehicle Parameters
-    
-mParray3(i+1) = mParray3(i) - PCR3*dt; 
-
-m(i+1) = m(i) - PCR3*dt;
-
-H(i+1) = H(i) + v_H(i)*dt;
-
-V(i+1) = V(i) + v_V(i)*dt; 
-
-v_H(i+1) = v_H(i) + a_H(i)*dt;
-
-v_V(i+1) = v_V(i) + a_V(i)*dt;
-
-if V(i+1) < 48000
-T(i+1) = interp1(ThirdStageThrust(:,1),ThirdStageThrust(:,6),V(i+1)/1000)*2;
-else
-T(i+1) = interp1(ThirdStageThrust(:,1),ThirdStageThrust(:,6),48000/1000)*2  ;
-end
-
-if V(i+1) < 85000
-v_a = interp1(atmosphere(:,1),atmosphere(:,5),V(i+1));
-else
-v_a = interp1(atmosphere(:,1),atmosphere(:,5),85000);
-end
-
-
-M(i+1) = sqrt(v_H(i+1)^2+v_V(i+1)^2)/v_a;
-
-Cd(i+1) = interp1(AeroCoeffs(:,1),AeroCoeffs(:,2),M(i+1)); 
-
-if V(i+1) < 85000
-D(i+1) = 0.5 * Cd(i+1) * (v_H(i+1)^2+v_V(i+1)^2) * A3 * interp1(atmosphere(:,1),atmosphere(:,4),V(i+1));
-else
-D(i+1) = 0;
-end
-
-
-% Gravity Turn
-beta(i+1) = beta(i) - 9.81/sqrt(v_H(i+1)^2+v_V(i+1)^2)*sin(deg2rad(90) - beta(i))*dt; % Gravity Turn Initiated  % NO EARTH CURVATURE INCLUDED YET
-
-
-a_V(i+1) = (T(i+1)*10^3-D(i+1))/m(i+1)*sin(beta(i+1)) - 9.81; 
-a_H(i+1) = (T(i+1)*10^3-D(i+1))/m(i+1)*cos(beta(i+1));
-
-t(i+1) = t(i) + dt;
-
-i = i+1;
-end
 
 figure(1);
 plot(H/1000,V/1000)
-
+% 
 % %==========================================================================
 % %----------------------- Second + Third Stage Tangential Steering Simulation ---------------------------
 % %==========================================================================
@@ -310,7 +236,7 @@ plot(H/1000,V/1000)
 % m30 = mPayload + mCF + mP3 + mB3; 
 % 
 % %Limiting Conditions and Boundary Constraints
-% Vf = 200e03; %Reference Trajectory Altitude (m)
+% Vf = 100e03; %Reference Trajectory Altitude (m)
 % Hf = 400e03; % Maximum Horizontal Distance (m) (arbitrary)
 % v_max =  7.67e03; % Maximum Velocity (m/s) (Orbital Velocity)    
 % m2f = mPayload + mB2 + mCF + mP3 + mB3; % Minimum Mass (kg)
@@ -330,7 +256,7 @@ plot(H/1000,V/1000)
 % SecondStage.bounds = bounds;
 % 
 % % No. Nodes To Use
-% algorithm.nodes = [30 30];
+% algorithm.nodes = [41 41];
 % 
 % CONSTANTS.nodes = algorithm.nodes;
 % 
