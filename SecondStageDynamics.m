@@ -1,6 +1,8 @@
 function xdot = SecondStageDynamics(primal)
 %--------------------------------------------------------------
 
+% NO DRAG CURRENTLY
+
 global CONSTANTS
 
 Thrust = [3000*4.*ones(1,CONSTANTS.nodes(1)) 700*2.*ones(1,CONSTANTS.nodes(2))]; %N  PLACEHOLDER, MAKE VARIABLE

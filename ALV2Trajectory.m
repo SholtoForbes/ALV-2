@@ -110,6 +110,8 @@ i = 1; % Temporary Iteration Counter
 
 pitchover = 'no';
 
+t_pitch = 20; % pitchover time
+
 while mParray1(i) > 0
 % Increment Vehicle Parameters
     
@@ -127,39 +129,45 @@ v_V(i+1) = v_V(i) + a_V(i)*dt;
 
 
 if V(i+1) < 48000
-T(i+1) = interp1(FirstStageThrust(:,1),FirstStageThrust(:,6),V(i+1)/1000) * N*3;
+T(i+1) = interp1(FirstStageThrust(:,1),FirstStageThrust(:,6),V(i+1)/1000) * N*6; % THIS IS MULTIPLIED BY 2
 else
-T(i+1) = interp1(FirstStageThrust(:,1),FirstStageThrust(:,6),48000/1000) * N*3;
+T(i+1) = interp1(FirstStageThrust(:,1),FirstStageThrust(:,6),48000/1000) * N*6;
 end
 
+if V(i+1) < 85000
 v_a = interp1(atmosphere(:,1),atmosphere(:,5),V(i+1));
+else
+v_a = interp1(atmosphere(:,1),atmosphere(:,5),85000);
+end
 
 M(i+1) = sqrt(v_H(i+1)^2+v_V(i+1)^2)/v_a;
 
 Cd(i+1) = interp1(AeroCoeffs(:,1),AeroCoeffs(:,2),M(i+1)); 
 
+if V(i+1) < 85000
 D(i+1) = 0.5 * Cd(i+1) * (v_H(i+1)^2+v_V(i+1)^2) * A1 * interp1(atmosphere(:,1),atmosphere(:,4),V(i+1));
-
-
+else
+D(i+1) = 0;
+end
 
 % Gravity Turn
-if t(i) < 40
+if t(i) < t_pitch
 beta(i+1) = deg2rad(90);
-elseif t(i) >= 30 && strcmp(pitchover,'yes') == 0 % Pitchover Time (Arbitrary Currently)
+elseif t(i) >= t_pitch && strcmp(pitchover,'yes') == 0 % Pitchover Time (Arbitrary Currently)
 beta(i+1) = deg2rad(89); % Pitchover Angle (assumed to be instantaneous)
 pitchover = 'yes';
-elseif t(i) >= 30 && strcmp(pitchover,'yes') == 1
+elseif t(i) >= t_pitch && strcmp(pitchover,'yes') == 1
 beta(i+1) = beta(i) - 9.81/sqrt(v_H(i+1)^2+v_V(i+1)^2)*sin(deg2rad(90) - beta(i))*dt; % Gravity Turn Initiated  % NO EARTH CURVATURE INCLUDED YET
 end
 
-a_V(i+1) = (T(i+1)*10^3-D(i+1))/m(i+1)*sin(beta(i+1)) - 9.81; 
+a_V(i+1) = (T(i+1)*10^3-D(i+1))/m(i+1)*sin(beta(i+1)) - 6.674e-11.*5.97e24./(V(i+1) + 6371e3).^2 + v_H(i+1).^2./(V(i+1) + 6371e3); 
 a_H(i+1) = (T(i+1)*10^3-D(i+1))/m(i+1)*cos(beta(i+1));
 
 t(i+1) = t(i) + dt;
 
 i = i+1;
 end
-
+temp_1 = i;
 
 
 %==========================================================================
@@ -209,9 +217,16 @@ D(i+1) = 0;
 end
 
 
-% Gravity Turn
-beta(i+1) = beta(i) - 9.81/sqrt(v_H(i+1)^2+v_V(i+1)^2)*sin(deg2rad(90) - beta(i))*dt; % Gravity Turn Initiated  % NO EARTH CURVATURE INCLUDED YET
 
+% Gravity Turn
+if t(i) < t_pitch
+beta(i+1) = deg2rad(90);
+elseif t(i) >= t_pitch && strcmp(pitchover,'yes') == 0 % Pitchover Time (Arbitrary Currently)
+beta(i+1) = deg2rad(89); % Pitchover Angle (assumed to be instantaneous)
+pitchover = 'yes';
+elseif t(i) >= t_pitch && strcmp(pitchover,'yes') == 1
+beta(i+1) = beta(i) - 9.81/sqrt(v_H(i+1)^2+v_V(i+1)^2)*sin(deg2rad(90) - beta(i))*dt; % Gravity Turn Initiated  % NO EARTH CURVATURE INCLUDED YET
+end
 
 a_V(i+1) = (T(i+1)*10^3-D(i+1))/m(i+1)*sin(beta(i+1)) - 9.81; 
 a_H(i+1) = (T(i+1)*10^3-D(i+1))/m(i+1)*cos(beta(i+1));
@@ -220,7 +235,7 @@ t(i+1) = t(i) + dt;
 
 i = i+1;
 end
-
+temp_2 = i;
 
 
 m30 = mPayload + mCF + mP3 + mB3;
@@ -269,8 +284,14 @@ end
 
 
 % Gravity Turn
+if t(i) < t_pitch 
+beta(i+1) = deg2rad(90);
+elseif t(i) >= t_pitch && strcmp(pitchover,'yes') == 0 % Pitchover Time (Arbitrary Currently)
+beta(i+1) = deg2rad(89); % Pitchover Angle (assumed to be instantaneous)
+pitchover = 'yes';
+elseif t(i) >= t_pitch && strcmp(pitchover,'yes') == 1
 beta(i+1) = beta(i) - 9.81/sqrt(v_H(i+1)^2+v_V(i+1)^2)*sin(deg2rad(90) - beta(i))*dt; % Gravity Turn Initiated  % NO EARTH CURVATURE INCLUDED YET
-
+end
 
 a_V(i+1) = (T(i+1)*10^3-D(i+1))/m(i+1)*sin(beta(i+1)) - 9.81; 
 a_H(i+1) = (T(i+1)*10^3-D(i+1))/m(i+1)*cos(beta(i+1));
@@ -279,9 +300,14 @@ t(i+1) = t(i) + dt;
 
 i = i+1;
 end
+temp_3 = i;
 
 figure(1);
-plot(H/1000,V/1000)
+hold on
+plot(H(1:temp_1)/1000,V(1:temp_1)/1000,'color','g')
+plot(H(temp_1:temp_2)/1000,V(temp_1:temp_2)/1000,'color','r')
+plot(H(temp_2:temp_3)/1000,V(temp_2:temp_3)/1000,'color','b')
+
 
 % %==========================================================================
 % %----------------------- Second + Third Stage Tangential Steering Simulation ---------------------------
@@ -297,7 +323,7 @@ plot(H/1000,V/1000)
 % % bound the time intervals
 % %-------------------------
 % 
-% t0 = 0;   tfMax = 400;  % Maximum Time Interval
+% t0 = 0;   tfMax = 1000;  % Maximum Time Interval
 % 
 % bounds.lower.time = [0 0 0];           
 % bounds.upper.time = [0 tfMax/2 tfMax];  
@@ -307,18 +333,18 @@ plot(H/1000,V/1000)
 % 
 % V0 = V(end);        H0 = 0;     v_V0 = v_V(end);     v_H0 = v_H(end);    m20 = mPayload + mCF + mP2 + mB2+ mP3 + mB3;     % Initial Conditions
 % 
-% m30 = mPayload + mCF + mP3 + mB3; 
+% m30 = mPayload + mCF + mP3 + mB3;  m3f = mPayload + mCF + mB3;
 % 
 % %Limiting Conditions and Boundary Constraints
-% Vf = 200e03; %Reference Trajectory Altitude (m)
-% Hf = 400e03; % Maximum Horizontal Distance (m) (arbitrary)
+% Vf = 400e03; %Reference Trajectory Altitude (m)
+% Hf = 600e03; % Maximum Horizontal Distance (m) (arbitrary)
 % v_max =  7.67e03; % Maximum Velocity (m/s) (Orbital Velocity)    
 % m2f = mPayload + mB2 + mCF + mP3 + mB3; % Minimum Mass (kg)
 % 
 % 
 % 
 % % Set Boundary Conditions and Limits
-% bounds.lower.states = [0.9*V0; H0; -1; 0.9*v_H0; 0];
+% bounds.lower.states = [0.9*V0; H0; -500; 0.9*v_H0; m3f];
 % bounds.upper.states = [ 1.1*Vf;  Hf; v_max; v_max; m20];
 % 
 % bounds.lower.controls = 0.;
@@ -330,7 +356,7 @@ plot(H/1000,V/1000)
 % SecondStage.bounds = bounds;
 % 
 % % No. Nodes To Use
-% algorithm.nodes = [30 30];
+% algorithm.nodes = [31 31];
 % 
 % CONSTANTS.nodes = algorithm.nodes;
 % 
@@ -388,7 +414,7 @@ plot(H/1000,V/1000)
 % 
 % subplot(5,1,5)
 % plot(t2,beta2);
-% 
+
 % % figure(3)
 % % subplot(2,5,[1,5]);
 % % 
