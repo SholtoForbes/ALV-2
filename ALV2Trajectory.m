@@ -165,7 +165,7 @@ plot(H/1000,V/1000)
 
 global CONSTANTS
 CONSTANTS.PCR2 = PCR2;
-
+CONSTANTS.PCR3 = PCR3;
 
 % Utilising DIDO to Solve a Linear Tangent Steering Problem
 
@@ -175,51 +175,59 @@ CONSTANTS.PCR2 = PCR2;
 
 t0 = 0;   tfMax = 400;  % Maximum Time Interval
 
-bounds.lower.time = [0 0];           
-bounds.upper.time = [0 tfMax];  
+bounds.lower.time = [0 0 0];           
+bounds.upper.time = [0 tfMax/2 tfMax];  
 
 
 % Set Initial Conditions
 
-V0 = V(end);        H0 = 0;     v_V0 = v_V(end);     v_H0 = v_H(end);    m0 = mPayload + mCF + mP2 + mB2+ mP3 + mB3;     % Initial Conditions
+V0 = V(end);        H0 = 0;     v_V0 = v_V(end);     v_H0 = v_H(end);    m20 = mPayload + mCF + mP2 + mB2+ mP3 + mB3;     % Initial Conditions
+
+m30 = mPayload + mCF + mP3 + mB3; 
 
 %Limiting Conditions and Boundary Constraints
-Vf = 100e03; %Reference Trajectory Altitude (m)
+Vf = 110e03; %Reference Trajectory Altitude (m)
 Hf = 400e03; % Maximum Horizontal Distance (m) (arbitrary)
 v_max =  7.67e03; % Maximum Velocity (m/s) (Orbital Velocity)    
-mf = mPayload + mB2 + mCF + mP3 + mB3; % Minimum Mass (kg)
+m2f = mPayload + mB2 + mCF + mP3 + mB3; % Minimum Mass (kg)
+
 
 
 % Set Boundary Conditions and Limits
-bounds.lower.states = [0.9*V0; H0; -1; 0.9*v_H0; mf];
-bounds.upper.states = [ 1.1*Vf;  Hf; v_max; v_max; m0];
+bounds.lower.states = [0.9*V0; H0; -1; 0.9*v_H0; 0];
+bounds.upper.states = [ 1.1*Vf;  Hf; v_max; v_max; m20];
 
 bounds.lower.controls = 0.;
 bounds.upper.controls = beta(end); % Maximum Angle 
 
-bounds.lower.events = [V0; H0; v_V0; v_H0; m0; Vf; 0];	
+bounds.lower.events = [V0; H0; v_V0; v_H0; m20; Vf; 0; m20 - m2f; m30; 0; 0; 0; 0];	
 bounds.upper.events = bounds.lower.events;
 
 SecondStage.bounds = bounds;
 
 % No. Nodes To Use
-algorithm.nodes = [30];
+algorithm.nodes = [31 31];
 
 CONSTANTS.nodes = algorithm.nodes;
 
+% Knots Guesses
+algorithm.knots.locations    = [t0  50 100];
+
 % %%Define Guess
-guess.states(1,:) = [V0, 400e03];
-guess.states(2,:) = [H0,  100e03];
-guess.states(3,:) = [v_V0,  0];
-guess.states(4,:) = [v_H0,  v_H0+1000];
-guess.states(5,:) = [m0,  mf];
-guess.controls    = [beta(end), 0];
-guess.time        = [t0, 100];
+guess.states(1,:) = [V0,200e03, 400e03];
+guess.states(2,:) = [H0,50e03,  100e03];
+guess.states(3,:) = [v_V0,v_V0/2,  0];
+guess.states(4,:) = [v_H0,v_H0+500,  v_H0+1000];
+guess.states(5,:) = [m20,(m20+m2f)/2,  m2f];
+guess.controls    = [beta(end),beta(end)/2, 0];
+guess.time        = [t0,50, 100];
 
 algorithm.guess = guess;
 % =======================================================================
-
-
+%  Tell DIDO that all your events are 'hard'; this is a redundant statement 
+%========================================================================
+algorithm.knots.definitions  = {'hard','hard','hard'};
+%==========================================================================
 
 
 % Define Subroutine Files
