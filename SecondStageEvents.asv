@@ -12,15 +12,12 @@ v_H0 = primal.states(4,1);
 %--------------------------------------------------------------------------
 
 %% pre-allocate 8 event conditions
-eventConditions = zeros(6,1);
+eventConditions = zeros(7,1);
 %%
 eventConditions(1) = V0;
 eventConditions(2) = H0;
 eventConditions(3) = v_V0;
 eventConditions(4) = v_H0;
-% eventConditions(5) = m0;
-% eventConditions(6) = Vf;
-% eventConditions(7) = v_Vf;
-
-eventConditions(5) = Vf;
-eventConditions(6) = v_Vf;
+eventConditions(5) = m0;
+eventConditions(6) = Vf;
+eventConditions(7) = v_Vf;
