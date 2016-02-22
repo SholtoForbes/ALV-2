@@ -1,8 +1,10 @@
 function xdot = SecondStageDynamics(primal)
 %--------------------------------------------------------------
+
 global CONSTANTS
 
-Thrust = 3000*4; %N
+Thrust = [3000*4.*ones(1,CONSTANTS.nodes(1)) 700*4.*ones(1,CONSTANTS.nodes(2))]; %N  PLACEHOLDER, MAKE VARIABLE
+
 
 % Initialise States
 V = primal.states(1,:);   
@@ -26,6 +28,6 @@ v_Hdot = Thrust./m .* cos(beta);
 
 % betadot = betadot; % Need to correct for Earths curvature
 
-mdot = -CONSTANTS.PCR2.*ones(1,CONSTANTS.nodes);
+mdot = [-CONSTANTS.PCR2.*ones(1,CONSTANTS.nodes(1)) -CONSTANTS.PCR3.*ones(1,CONSTANTS.nodes(2))];
 
 xdot = [Vdot; Hdot; v_Vdot; v_Hdot; mdot];
