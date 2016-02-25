@@ -1,7 +1,6 @@
-% ALV-2 Trajectory Simulation
-% Sholto Forbes-Spyratos
-
-clear all
+function [rdiff] = ALV2FUNCTION(x)
+%UNTITLED2 Summary of this function goes here
+%   Detailed explanation goes here
 % Atmosphere Data (1976 NASA Model)
 atmosphere = dlmread('atmosphere.txt');
 
@@ -239,27 +238,10 @@ temp_1 = i;
 %----------------------- Third Stage Simulation --------------------------
 %==========================================================================
 
-% alpha = deg2rad(-5); % set angle of attack
-
 
 m(i) = m(i) - mB2;
 
 mParray(i) = mP3;
-
-
-
-% optimise 
-A = [];
-b = [];
-Aeq = [];
-beq = [];
-
-lb = [-.1,-10];
-ub = [.1,10];
-
-x0 = [0,0];
-x = fmincon(@ALV2FUNCTION,x0,A,b,Aeq,beq,lb,ub)
-
 
 
 j = 1;
@@ -307,13 +289,12 @@ end
 temp_1 = i;
 
 
-figure(1)
+% absendgamma = abs(gamma(end))
 
-subplot(4,1,1)
-plot(t,(r-r_E)/1000)
-subplot(4,1,2)
-plot(t,gamma)
-subplot(4,1,3)
-plot(t,v)
-subplot(4,1,4)
-plot(t,m)
+% rdiff = abs((r(end)-r_E)-400000)
+
+
+rdiff = abs((r(end)-r_E)-400000) + 10*abs(gamma(end))
+
+end
+
