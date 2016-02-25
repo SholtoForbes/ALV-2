@@ -180,7 +180,7 @@ temp_1 = i;
 %----------------------- Second Stage Simulation --------------------------
 %==========================================================================
 
-alpha = deg2rad(-5); % set angle of attack
+alpha = deg2rad(-6); % set angle of attack
 
 
 m(i) = m(i) - mB1*N;
