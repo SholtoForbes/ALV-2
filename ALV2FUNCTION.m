@@ -1,4 +1,4 @@
-function [rdiff] = ALV2FUNCTION(x)
+function [rdiff,t,r,gamma,v,m] = ALV2FUNCTION(x)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 % Atmosphere Data (1976 NASA Model)
@@ -179,7 +179,7 @@ temp_1 = i;
 %----------------------- Second Stage Simulation --------------------------
 %==========================================================================
 
-alpha = deg2rad(-6); % set angle of attack
+% alpha = deg2rad(-6); % set angle of attack
 
 
 m(i) = m(i) - mB1*N;
@@ -187,7 +187,17 @@ m(i) = m(i) - mB1*N;
 mParray(i) = mP2;
 
 
+j = 1;
+t_temp(1) = 0; % initiate temporary time scale for alpha calculation
+
 while mParray(i) > 0
+    
+alpha = deg2rad( x(1)*t_temp(j) + x(2)); %determine angle of attack
+% alpha = deg2rad( x(1)*t_temp(j)^4 + x(2)*t_temp(j)^3 + x(3)*t_temp(j)^2 + x(4)*t_temp(j) + x(5));
+
+
+j = j+1;
+t_temp(j) = t_temp(j-1) + dt;
     
 % Increment Equations of Motion
 [rdot,xidot,phidot,gammadot,vdot,zetadot] = RotCoords(r(i),xi(i),phi(i),gamma(i),v(i),zeta(i),L,D(i),T(i),m(i),alpha);
@@ -244,8 +254,7 @@ m(i) = m(i) - mB2;
 mParray(i) = mP3;
 
 
-j = 1;
-t_temp(1) = 0; % initiate temporary time scale for alpha calculation
+
 
 while mParray(i) > 0
     
