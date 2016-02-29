@@ -1,0 +1,10 @@
+function [t,r,gamma,v,m,xi,phi] = ALV2Flyback(t0,r0,gamma0,v0,,xi0,phi0)
+% Flyback Simulation of the ALV-2 First Stages
+% Sholto Forbes-Spyratos
+
+
+
+
+
+end
+

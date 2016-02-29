@@ -1,6 +1,7 @@
-function [rdiff,t,r,gamma,v,m] = ALV2FUNCTION(x)
-%UNTITLED2 Summary of this function goes here
-%   Detailed explanation goes here
+function [rdiff,t,r,gamma,v,m,xi,phi,zeta,i12,i23] = ALV2FUNCTION(x)
+% ALV2 Simulation Function
+% Sholto Forbes-Spyratos
+
 % Atmosphere Data (1976 NASA Model)
 atmosphere = dlmread('atmosphere.txt');
 
@@ -86,14 +87,16 @@ dt = 0.1; % Timestep (s)
 L = 0; % Lift, none
 alpha = 0; % Angle of Attack, zero
 
-% Initialise Arrays
-r(1) = r_E;
-xi(1) = 0;
-phi(1) = 0;
-gamma(1) = deg2rad(90);
-v(1) = 0;
-zeta(1) = 0;
+% Initialise Arrays & Set Initial Conditions
+% Launch Conditions
+r(1) = r_E; % Radius (m)
+xi(1) = deg2rad(153); % Longitude (rad)
+phi(1) = deg2rad(-27); % Latitude (rad)
+gamma(1) = deg2rad(90); % Flight Path Angle (rad)
+v(1) = 0; % Velocity (m/s)
+zeta(1) = deg2rad(97); % Heading Angle (rad)
 
+% Vehicle Conditions
 m(1) = (mP1 + mAF + mL)*N  + mPayload + mCF + mP2 + mB2+ mP3 + mB3; % Mass Array (kg)
 t(1) = 0; % Time Array (s)
 v_a = interp1(atmosphere(:,1),atmosphere(:,5),r(1)-r_E); % Speed of Sound
@@ -171,7 +174,7 @@ end
 temp_1 = i;
 
 
-
+i12 = i; % Node No Of Separation
 
 
 
@@ -243,6 +246,7 @@ i = i+1;
 end
 temp_1 = i;
 
+i23 = i; % Node No Of Separation
 
 %==========================================================================
 %----------------------- Third Stage Simulation --------------------------
@@ -303,7 +307,9 @@ temp_1 = i;
 % rdiff = abs((r(end)-r_E)-400000)
 
 
-rdiff = abs((r(end)-r_E)-400000) + 1000*abs(gamma(end))
+rdiff = abs((r(end)-r_E)-400000) + 10000*abs(gamma(end)); % Function to be minimised. Controls the target altitude and flight path angle.
 
+disp('Convergence Parameter') ;
+disp(rdiff);
 end
 
