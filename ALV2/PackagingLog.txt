@@ -1,0 +1,31 @@
+ant:
+<ant>
+  <mkdir dir="C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2\for_redistribution" />
+  <mkdir dir="C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2\for_testing" />
+  <mkdir dir="C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2\for_redistribution_files_only" />
+</ant>
+mcc -C -o ALV2 -W WinMain:ALV2 -T link:exe -d C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2\for_testing -v C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2.m -a C:\Users\uqsforb1\Documents\GitHub\ALV-2\AeroCoeffs.txt -a C:\Users\uqsforb1\Documents\GitHub\ALV-2\atmosphere.txt -a C:\Users\uqsforb1\Documents\GitHub\ALV-2\FirstStageThrust.txt -a 'C:\Program Files\MATLAB\R2014b\toolbox\map\mapdata\landareas.shp' -a C:\Users\uqsforb1\Documents\GitHub\ALV-2\SecondStageThrust.txt -a C:\Users\uqsforb1\Documents\GitHub\ALV-2\ThirdStageThrust.txt 
+Compiler version: 5.2 (R2014b)
+Dependency analysis by REQUIREMENTS.
+[Warning: Adding path "C:\Users\uqsforb1\Documents\GitHub\ALV-2" to Compiler
+path instance.] 
+Parsing file "C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2.m"
+	(Referenced from: "Compiler Command Line").
+Deleting 9 temporary MEX authorization files.
+Removing: 'C:\Users\uqsforb1\AppData\Local\Temp\mathworks_tmp_9144_14229_9144.auth'.
+Removing: 'C:\Users\uqsforb1\AppData\Local\Temp\mathworks_tmp_9144_8273_9144.auth'.
+Removing: 'C:\Users\uqsforb1\AppData\Local\Temp\mathworks_tmp_9144_8358_9144.auth'.
+Removing: 'C:\Users\uqsforb1\AppData\Local\Temp\mathworks_tmp_9144_31548_9144.auth'.
+Removing: 'C:\Users\uqsforb1\AppData\Local\Temp\mathworks_tmp_9144_30506_9144.auth'.
+Removing: 'C:\Users\uqsforb1\AppData\Local\Temp\mathworks_tmp_9144_17660_9144.auth'.
+Removing: 'C:\Users\uqsforb1\AppData\Local\Temp\mathworks_tmp_9144_10403_9144.auth'.
+Removing: 'C:\Users\uqsforb1\AppData\Local\Temp\mathworks_tmp_9144_8329_9144.auth'.
+Removing: 'C:\Users\uqsforb1\AppData\Local\Temp\mathworks_tmp_9144_29112_9144.auth'.
+Generating file "C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2\for_testing\readme.txt".
+Packaging...
+Adding custom icon C:\Program Files\MATLAB\R2014b\toolbox\compiler\Resources\default_icon.ico to C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2\for_testing\ALV2.exe.
+Attempting to embed the CTF archive into the application C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2\for_testing\ALV2.exe.
+Finished embedding CTF archive. Deleting the external CTF archive.
+Creating the bundle...
+Web based installer created at C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2\for_redistribution\MyAppInstaller_web.exe.
+Packaging complete.

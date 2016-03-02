@@ -1,0 +1,31 @@
+ant:
+<ant>
+  <mkdir dir="C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2TrajectorySim\for_redistribution" />
+  <mkdir dir="C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2TrajectorySim\for_testing" />
+  <mkdir dir="C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2TrajectorySim\for_redistribution_files_only" />
+</ant>
+mcc -C -o ALV2TrajectorySim -W WinMain:ALV2TrajectorySim -T link:exe -d C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2TrajectorySim\for_testing -v C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2.m 
+Compiler version: 5.2 (R2014b)
+Dependency analysis by REQUIREMENTS.
+[Warning: Adding path "C:\Users\uqsforb1\Documents\GitHub\ALV-2" to Compiler
+path instance.] 
+Parsing file "C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2.m"
+	(Referenced from: "Compiler Command Line").
+Deleting 9 temporary MEX authorization files.
+Removing: 'C:\Users\uqsforb1\AppData\Local\Temp\mathworks_tmp_8416_19354_8416.auth'.
+Removing: 'C:\Users\uqsforb1\AppData\Local\Temp\mathworks_tmp_8416_15883_8416.auth'.
+Removing: 'C:\Users\uqsforb1\AppData\Local\Temp\mathworks_tmp_8416_31129_8416.auth'.
+Removing: 'C:\Users\uqsforb1\AppData\Local\Temp\mathworks_tmp_8416_7036_8416.auth'.
+Removing: 'C:\Users\uqsforb1\AppData\Local\Temp\mathworks_tmp_8416_20642_8416.auth'.
+Removing: 'C:\Users\uqsforb1\AppData\Local\Temp\mathworks_tmp_8416_22390_8416.auth'.
+Removing: 'C:\Users\uqsforb1\AppData\Local\Temp\mathworks_tmp_8416_11287_8416.auth'.
+Removing: 'C:\Users\uqsforb1\AppData\Local\Temp\mathworks_tmp_8416_7948_8416.auth'.
+Removing: 'C:\Users\uqsforb1\AppData\Local\Temp\mathworks_tmp_8416_12050_8416.auth'.
+Generating file "C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2TrajectorySim\for_testing\readme.txt".
+Packaging...
+Adding custom icon C:\Program Files\MATLAB\R2014b\toolbox\compiler\Resources\default_icon.ico to C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2TrajectorySim\for_testing\ALV2TrajectorySim.exe.
+Attempting to embed the CTF archive into the application C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2TrajectorySim\for_testing\ALV2TrajectorySim.exe.
+Finished embedding CTF archive. Deleting the external CTF archive.
+Creating the bundle...
+Web based installer created at C:\Users\uqsforb1\Documents\GitHub\ALV-2\ALV2TrajectorySim\for_redistribution\MyAppInstaller_web.exe.
+Packaging complete.
