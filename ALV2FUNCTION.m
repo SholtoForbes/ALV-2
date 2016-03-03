@@ -1,4 +1,4 @@
-function [rdiff,t,r,gamma,v,m,xi,phi,zeta,i12,i23,alpha] = ALV2FUNCTION(x,r0,gamma0,xi0,phi0,zeta0,rTarget)
+function [rdiff,t,r,gamma,v,m,xi,phi,zeta,i12,i23,alpha] = ALV2FUNCTION(x,r0,gamma0,xi0,phi0,zeta0,rTarget,Nodes)
 % ALV2 Simulation Function
 % Sholto Forbes-Spyratos
 
@@ -147,7 +147,7 @@ end
 
 M(i+1) = v(i+1)/v_a;
 
-Cd(i+1) = interp1(AeroCoeffs(:,1),AeroCoeffs(:,2),M(i+1)); 
+Cd(i+1) = interp1(AeroCoeffs(:,1),AeroCoeffs(:,2),M(i+1)) + 1.1*sin(alpha(i+1))^3; 
 
 if r(i+1)-r_E < 85000
 D(i+1) = 0.5 * Cd(i+1) * v(i+1)^2 * A1 * interp1(atmosphere(:,1),atmosphere(:,4),r(i+1)-r_E);
@@ -192,14 +192,37 @@ m(i) = m(i) - mB1*N;
 mParray(i) = mP2;
 
 
+t_flight2 = mP2/PCR2;
+
+
 j = 1;
 t_temp(1) = 0; % initiate temporary time scale for alpha calculation
 
 while mParray(i) > 0
     
-alpha(i+1) = deg2rad( x(1)*t_temp(j) + x(2)); %determine angle of attack
+% alpha(i+1) = deg2rad( x(1)*t_temp(j) + x(2)); %determine angle of attack
 % alpha = deg2rad( x(1)*t_temp(j)^4 + x(2)*t_temp(j)^3 + x(3)*t_temp(j)^2 + x(4)*t_temp(j) + x(5));
 
+% Nodes = 4;
+
+% if t_temp(j) < t_flight2/3
+% alpha(i+1) = deg2rad( x(1));
+% elseif t_temp(j) <= 2*t_flight2/3
+% alpha(i+1) = deg2rad( x(2));
+% else
+% alpha(i+1) = deg2rad( x(3)); 
+% end
+
+for n = 1:Nodes
+
+if (n-1)*t_flight2/(Nodes) <= t_temp(j) && t_temp(j) <= n*t_flight2/(Nodes)
+    
+% alpha(i+1) = deg2rad( x(n));
+alpha(i+1) = alpha (i) + dt*deg2rad( x(n));
+
+end
+    
+end
 
 j = j+1;
 t_temp(j) = t_temp(j-1) + dt;
@@ -234,7 +257,7 @@ end
 
 M(i+1) = v(i+1)/v_a;
 
-Cd(i+1) = interp1(AeroCoeffs(:,1),AeroCoeffs(:,2),M(i+1)); 
+Cd(i+1) = interp1(AeroCoeffs(:,1),AeroCoeffs(:,2),M(i+1)) + 1.1*sin(alpha(i+1))^3; 
 
 if r(i+1)-r_E < 85000
 D(i+1) = 0.5 * Cd(i+1) * v(i+1)^2 * A2 * interp1(atmosphere(:,1),atmosphere(:,4),r(i+1)-r_E);
@@ -260,12 +283,29 @@ m(i) = m(i) - mB2;
 mParray(i) = mP3;
 
 
+t_flight3 = mP3/PCR3;
 
+
+j = 1;
+t_temp(1) = 0; % initiate temporary time scale for alpha calculation
 
 while mParray(i) > 0
     
 
-alpha(i+1) = deg2rad( x(1)*t_temp(j) + x(2)); %determine angle of attack
+% alpha(i+1) = deg2rad( x(1)*t_temp(j) + x(2)); %determine angle of attack
+% alpha(i+1) = deg2rad( x(Nodes));
+
+for n = 1:Nodes
+
+if (n-1)*t_flight3/(Nodes) <= t_temp(j) && t_temp(j) <= n*t_flight3/(Nodes)
+    
+% alpha(i+1) = deg2rad( x(n + Nodes));
+
+alpha(i+1) = alpha (i) + dt*deg2rad( x(n + Nodes));
+
+end
+    
+end
 
 j = j+1;
 t_temp(j) = t_temp(j-1) + dt;
@@ -309,7 +349,7 @@ temp_1 = i;
 % rdiff = abs((r(end)-r_E)-400000)
 
 
-rdiff = abs((r(end)-r_E)-rTarget) + 10000*abs(gamma(end)); % Function to be minimised. Controls the target altitude and flight path angle.
+rdiff = abs((r(end)-r_E)-rTarget) + 10000*abs(gamma(end)) - v(end); % Function to be minimised. Controls the target altitude and flight path angle.
 
 disp('Convergence Parameter') ;
 disp(rdiff);

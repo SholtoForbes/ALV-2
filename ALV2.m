@@ -33,18 +33,31 @@ Aeq = [];
 beq = [];
 
 % Angle of attack is a linear function of time At + B
-lb = [-.1,-10]; % lower bounds of A, B
-ub = [.1,10]; % upper bounds of A, B
 
-x0 = [0,0];
+Nodes = 10; % No. Nodes Evaluated, For Each Stage
+
+% lb = [-10,-10,-10,-10]; % lower bounds of A, B
+% ub = [10,10,10,10]; % upper bounds of A, B
+% 
+% x0 = [0,0,0,0];
+
+% lb = -10*ones(1,Nodes*2); % lower bounds of A, B
+% ub = 10*ones(1,Nodes*2); % upper bounds of A, B
+
+lb = -.1*ones(1,Nodes*2); % lower bounds of A, B
+ub = .1*ones(1,Nodes*2); % upper bounds of A, B
+
+x0 = zeros(1,Nodes*2);
+
+
 
 nonlcon = [];
 options = optimoptions('fmincon','Display','iter','Algorithm','sqp','UseParallel',true);
 
-x = fmincon(@(x)ALV2FUNCTION(x,r0,gamma0,xi0,phi0,zeta0,rTarget),x0,A,b,Aeq,beq,lb,ub,nonlcon, options)  % run trajectory calculation routine, this determines the correct angle of attack schedule for the upper stages
+x = fmincon(@(x)ALV2FUNCTION(x,r0,gamma0,xi0,phi0,zeta0,rTarget,Nodes),x0,A,b,Aeq,beq,lb,ub,nonlcon, options)  % run trajectory calculation routine, this determines the correct angle of attack schedule for the upper stages
 
 
-[rdiff,t,r,gamma,v,m,xi,phi,zeta,i12,i23,alpha] = ALV2FUNCTION(x,r0,gamma0,xi0,phi0,zeta0,rTarget); % simulate trajectory
+[rdiff,t,r,gamma,v,m,xi,phi,zeta,i12,i23,alpha] = ALV2FUNCTION(x,r0,gamma0,xi0,phi0,zeta0,rTarget,Nodes); % simulate trajectory
 
 r_E = 6371000; % radius of Earth (m)
 
