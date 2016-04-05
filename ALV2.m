@@ -49,18 +49,18 @@ beq = [];
 % 
 % x0 = zeros(1,Nodes*2);
 
-lb = [0]; % lower bounds of A, B
-ub = [1]; % upper bounds of A, B
+lb = [0,deg2rad(70)]; % lower bounds of A, B
+ub = [1,deg2rad(90)]; % upper bounds of A, B
 
-x0 = [0];
+x0 = [0.01,deg2rad(80)];
 
 nonlcon = [];
 options = optimoptions('fmincon','Display','iter','Algorithm','sqp','UseParallel',true);
-
+% 
 x = fmincon(@(x)ALV2FUNCTION(x,r0,gamma0,xi0,phi0,zeta0,rTarget),x0,A,b,Aeq,beq,lb,ub,nonlcon, options)  % run trajectory calculation routine, this determines the correct angle of attack schedule for the upper stages
 
 
-[rdiff,t,r,gamma,v,m,xi,phi,zeta,i12,i23,alpha] = ALV2FUNCTION(x,r0,gamma0,xi0,phi0,zeta0,rTarget); % simulate trajectory
+[diff,t,r,gamma,v,m,xi,phi,zeta,i12,i23,alpha] = ALV2FUNCTION(x,r0,gamma0,xi0,phi0,zeta0,rTarget); % simulate trajectory
 
 r_E = 6371000; % radius of Earth (m)
 
@@ -90,14 +90,14 @@ plot(t(1:i12),m(1:i12),'LineWidth',1.5,'Color','b')
 plot(t(i12:i23),m(i12:i23),'LineWidth',1.5,'Color','r')
 plot(t(i23:end),m(i23:end),'LineWidth',1.5,'Color','g')
 ylabel('Mass (kg)');
-xlabel('Time (s)');
-% subplot(5,1,5)
-% hold on
-% plot(t(1:i12),rad2deg(alpha(1:i12)),'LineWidth',1.5,'Color','b')
-% plot(t(i12:i23),rad2deg(alpha(i12:i23)),'LineWidth',1.5,'Color','r')
-% plot(t(i23:end),rad2deg(alpha(i23:end)),'LineWidth',1.5,'Color','g')
-% ylabel('Angle of Attack (deg)');
 % xlabel('Time (s)');
+subplot(5,1,5)
+hold on
+plot(t(1:i12),rad2deg(alpha(1:i12)),'LineWidth',1.5,'Color','b')
+plot(t(i12:i23),rad2deg(alpha(i12:i23)),'LineWidth',1.5,'Color','r')
+plot(t(i23:end),rad2deg(alpha(i23:end)),'LineWidth',1.5,'Color','g')
+ylabel('Angle of Attack (deg)');
+xlabel('Time (s)');
 
 figure(2)
 hold on

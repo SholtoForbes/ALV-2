@@ -1,4 +1,4 @@
-function [rdiff,t,r,gamma,v,m,xi,phi,zeta,i12,i23,alpha] = ALV2FUNCTION(x,r0,gamma0,xi0,phi0,zeta0,rTarget)
+function [diff,t,r,gamma,v,m,xi,phi,zeta,i12,i23,alpha] = ALV2FUNCTION(x,r0,gamma0,xi0,phi0,zeta0,rTarget)
 % ALV2 Simulation Function
 % Sholto Forbes-Spyratos
 
@@ -19,7 +19,7 @@ SecondStageThrust = dlmread('SecondStageThrust.txt');
 ThirdStageThrust = dlmread('ThirdStageThrust.txt');
 
 % no. First Stage Modules
-N = 4;
+N = 2;
 
 A1 = .28 + N*0.5; % Reference Area of first stage with 4 boosters, each booster is 0.5 and core stage is 0.28 (m^2)
 A2 = 0.28;
@@ -178,14 +178,17 @@ temp_1 = i;
 
 i12 = i; % Node No Of Separation
 
-gamma20 = gamma(end);
+
 
 %==========================================================================
 %----------------------- Second Stage Simulation --------------------------
 %==========================================================================
 
+% beta(1) = gamma(end); % Thrust Inclination
+beta(1) = x(2);
+
 % alpha = deg2rad(-6); % set angle of attack
-alpha = deg2rad(0);
+% alpha = deg2rad(0);
 
 m(i) = m(i) - mB1*N;
 
@@ -198,7 +201,14 @@ t_flight2 = mP2/PCR2;
 j = 1;
 t_temp(1) = 0; % initiate temporary time scale for alpha calculation
 
-while mParray(i) > 0 && r(i) < 400000 + r_E && r(i) > r_E
+while mParray(i) > 0 && r(i) > r_E && r(i) < rTarget + r_E 
+    
+    
+% LINEAR TANGENT STEERING =================================================
+beta(j+1) = atan(tan(beta(1)) - x(1)*t_temp(j)); % Modify thrust pointing angle (taken from horizontal position)
+
+alpha(i+1) = beta(j) - gamma(i); % Calculate AoA from thrust pointing angle and trajectory angle
+% =========================================================================  
     
 % alpha(i+1) = deg2rad( x(1)*t_temp(j) + x(2)); %determine angle of attack
 % alpha = deg2rad( x(1)*t_temp(j)^4 + x(2)*t_temp(j)^3 + x(3)*t_temp(j)^2 + x(4)*t_temp(j) + x(5));
@@ -228,16 +238,13 @@ j = j+1;
 t_temp(j) = t_temp(j-1) + dt;
     
 % Increment Equations of Motion
-% [rdot,xidot,phidot,gammadot,vdot,zetadot] = RotCoords(r(i),xi(i),phi(i),gamma(i),v(i),zeta(i),L,D(i),T(i),m(i),alpha(i));
-[rdot,xidot,phidot,gammadot,vdot,zetadot] = RotCoords(r(i),xi(i),phi(i),gamma(i),v(i),zeta(i),L,D(i),T(i),m(i),alpha);
+[rdot,xidot,phidot,gammadot,vdot,zetadot] = RotCoords(r(i),xi(i),phi(i),gamma(i),v(i),zeta(i),L,D(i),T(i),m(i),alpha(i));
+% [rdot,xidot,phidot,gammadot,vdot,zetadot] = RotCoords(r(i),xi(i),phi(i),gamma(i),v(i),zeta(i),L,D(i),T(i),m(i),alpha);
 
 r(i+1) = r(i) + dt*rdot;
 xi(i+1) = xi(i) + dt*xidot;
 phi(i+1) = phi(i) + dt*phidot;
-% gamma(i+1) = gamma(i) + dt*gammadot;
-
-gamma(i+1) = atan(tan(gamma20) - x(1)*t_temp(j));
-
+gamma(i+1) = gamma(i) + dt*gammadot;
 v(i+1) = v(i) + dt*vdot;
 zeta(i+1) = zeta(i) + dt*zetadot;
     
@@ -261,7 +268,7 @@ end
 
 M(i+1) = v(i+1)/v_a;
 
-Cd(i+1) = interp1(AeroCoeffs(:,1),AeroCoeffs(:,2),M(i+1)) + 1.1*sin(alpha)^3; 
+Cd(i+1) = interp1(AeroCoeffs(:,1),AeroCoeffs(:,2),M(i)) + 1.1*sin(alpha(i))^3; 
 
 if r(i+1)-r_E < 85000
 D(i+1) = 0.5 * Cd(i+1) * v(i+1)^2 * A2 * interp1(atmosphere(:,1),atmosphere(:,4),r(i+1)-r_E);
@@ -293,8 +300,13 @@ t_flight3 = mP3/PCR3;
 % j = 1;
 % t_temp(1) = 0; % initiate temporary time scale for alpha calculation
 
-while mParray(i) > 0 && r(i) < 400000 + r_E  && r(i) > r_E
+while mParray(i) > 0 && r(i) > r_E && r(i) < rTarget + r_E  
     
+% LINEAR TANGENT STEERING =================================================
+beta(j+1) = atan(tan(beta(1)) - x(1)*t_temp(j));
+
+alpha(i+1) = beta(j) - gamma(i);
+% ========================================================================= 
 
 % alpha(i+1) = deg2rad( x(1)*t_temp(j) + x(2)); %determine angle of attack
 % alpha(i+1) = deg2rad( x(Nodes));
@@ -317,15 +329,15 @@ t_temp(j) = t_temp(j-1) + dt;
 
     
 % Increment Equations of Motion
-% [rdot,xidot,phidot,gammadot,vdot,zetadot] = RotCoords(r(i),xi(i),phi(i),gamma(i),v(i),zeta(i),L,D(i),T(i),m(i),alpha(i));
-[rdot,xidot,phidot,gammadot,vdot,zetadot] = RotCoords(r(i),xi(i),phi(i),gamma(i),v(i),zeta(i),L,D(i),T(i),m(i),alpha);
+[rdot,xidot,phidot,gammadot,vdot,zetadot] = RotCoords(r(i),xi(i),phi(i),gamma(i),v(i),zeta(i),L,D(i),T(i),m(i),alpha(i));
+% [rdot,xidot,phidot,gammadot,vdot,zetadot] = RotCoords(r(i),xi(i),phi(i),gamma(i),v(i),zeta(i),L,D(i),T(i),m(i),alpha);
 
 r(i+1) = r(i) + dt*rdot;
 xi(i+1) = xi(i) + dt*xidot;
 phi(i+1) = phi(i) + dt*phidot;
-% gamma(i+1) = gamma(i) + dt*gammadot;
+gamma(i+1) = gamma(i) + dt*gammadot;
 
-gamma(i+1) = atan(tan(gamma20) - x(1)*t_temp(j));
+% gamma(i+1) = atan(tan(gamma20) - x(1)*t_temp(j));
 
 v(i+1) = v(i) + dt*vdot;
 zeta(i+1) = zeta(i) + dt*zetadot;
@@ -359,10 +371,15 @@ temp_1 = i;
 
 % rdiff = abs((r(end)-r_E)-rTarget) + 10000*abs(gamma(end)) - v(end); % Function to be minimised. Controls the target altitude and flight path angle.
 
-rdiff = 100*abs(gamma(end)) ;
-% rdiff = -v(end);
+diff = abs(gamma(end))   -  0.0001*v(end);
+
+% rdiff = ((r(end)-r_E)-rTarget);
+
+% mdiff = abs(m(end)-40);
+
+% rdiff = abs((r(end)-r_E)-rTarget);
 
 disp('Convergence Parameter') ;
-disp(rdiff);
+disp(diff);
 end
 
